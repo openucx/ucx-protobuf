@@ -7,7 +7,6 @@
 # See file LICENSE for terms.
 #
 #
-# TODO:
 # Environment variables set by Jenkins CI:
 #  - WORKSPACE         : path to work dir
 #  - BUILD_NUMBER      : jenkins build number
@@ -15,6 +14,7 @@
 #  - EXECUTOR_NUMBER   : number of executor within the test machine
 #  - JENKINS_RUN_TESTS : whether to run unit tests
 #
+# TODO:
 # Optional environment variables (could be set by job configuration):
 #  - nworkers : number of parallel executors
 #  - worker   : number of current parallel executor
@@ -23,6 +23,15 @@
 
 WORKSPACE=${WORKSPACE:=$PWD}
 MAKE="make -j$(($(nproc) / 2 + 1))"
+
+# Set CPU affinity to 2 cores, for performance tests
+if [ -n "$EXECUTOR_NUMBER" ]; then
+    AFFINITY="taskset -c $(( 2 * EXECUTOR_NUMBER ))","$(( 2 * EXECUTOR_NUMBER + 1))"
+    TIMEOUT="timeout 10m"
+else
+    AFFINITY=""
+    TIMEOUT=""
+fi
 
 echo " ==== Prepare ===="
 env
